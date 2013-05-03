@@ -9,43 +9,53 @@ class Controller_Users extends Controller_Base
     
     public function action_signup()
     {
-        // Setup Validation
-        $val = Validation::forge('signup_user');
-
-        // Set validation rules
-        $val->add('username', 'Username')
-            ->add_rule('required')
-            ->add_rule('min_length', 3)
-            ->add_rule('max_length', 20);
-
-        $val->add('password', 'Password')
-            ->add_rule('required')
-            ->add_rule('min_length', 3)
-            ->add_rule('max_length', 20);
-
-        $val->add('email', 'Email Address')
-            ->add_rule('required')
-            ->add_rule('valid_email');
-
-        // Validate
-        if ($val->run())
+        try
         {
-            // Create user
-            if ( Auth::instance()->create_user($val->validated('username'), $val->validated('password'), $val->validated('email'), 1) )
+            // Setup Validation
+            $val = Validation::forge('signup_user');
+
+            // Set validation rules
+            $val->add('username', 'Username')
+                ->add_rule('required')
+                ->add_rule('min_length', 3)
+                ->add_rule('max_length', 20);
+
+            $val->add('password', 'Password')
+                ->add_rule('required')
+                ->add_rule('min_length', 3)
+                ->add_rule('max_length', 20);
+
+            $val->add('email', 'Email Address')
+                ->add_rule('required')
+                ->add_rule('valid_email');
+
+            // Validate
+            if ($val->run())
             {
-                Session::set_flash('success', 'Thanks for registering!');
-                Response::redirect('users/index');
+                // Create user
+                if ( Auth::instance()->create_user($val->validated('username'), $val->validated('password'), $val->validated('email'), 1) )
+                {
+                    Session::set_flash('success', 'Thanks for registering!');
+                    Response::redirect('users/index');
+                }
+                else
+                {
+                    throw new Exception('An unexpected error occurred. Please try again.');
+                }
             }
             else
             {
-                throw new Exception('An unexpected error occurred. Please try again.');
+                $val->set_message('valid_email', 'The field :label is not a valid email address.');
             }
         }
-        else
+        catch(SimpleUserUpdateException $ex)
         {
-            $val->set_message('valid_email', 'The field :label is not a valid email address.');
+            Session::set_flash('failed', $ex->getMessage());
         }
-        
+        catch(Exception $ex)
+        {
+            Session::set_flash('failed', $ex->getMessage());
+        }
         return Response::forge( View::forge('users/signup')->set('val', $val, false), 200 );
     }
 

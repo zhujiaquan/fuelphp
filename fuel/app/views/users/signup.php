@@ -7,6 +7,7 @@
 <h2>Sign Up</h2>
 <p>Sign up for a new account by filling the form below.</p>
 
+<?php echo Session::get_flash('failed'); ?>
 <?php echo $val->show_errors(); ?>
 <?php echo Form::open('users/signup'); ?>
 
